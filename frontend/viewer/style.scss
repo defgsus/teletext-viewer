@@ -1,0 +1,68 @@
+:root {
+  --color-black: #000;
+  --color-red: #f00;
+  --color-green: #0f0;
+  --color-yellow: #ff0;
+  --color-blue: #00f;
+  --color-magenta: #f0f;
+  --color-cyan: #0ff;
+  --color-white: #fff;
+}
+
+@font-face {
+  font-family: "unscii16";
+  src: url("unscii-16.woff") format("woff"),
+}
+@font-face {
+  font-family:"unscii8";
+  src: url("unscii-8.woff") format("woff"),
+}
+
+.teletext-viewer {
+  font-family: monospace;
+
+  .teletext-page-wrapper {
+    margin: .1rem;
+    padding: 8px;
+    border: 1px solid gray;
+    display: inline-block;
+    background: var(--color-black);
+    color: var(--color-white);
+
+    .teletext-page {
+      font-family: "unscii16", monospace;
+      font-size: 16px;
+      line-height: 16px;
+      white-space: pre-wrap;
+
+      .color-fg-b { color: var(--color-black); }
+      .color-fg-r { color: var(--color-red); }
+      .color-fg-g { color: var(--color-green); }
+      .color-fg-y { color: var(--color-yellow); }
+      .color-fg-l { color: var(--color-blue); }
+      .color-fg-m { color: var(--color-magenta); }
+      .color-fg-c { color: var(--color-cyan); }
+      .color-fg-w { color: var(--color-white); }
+
+      .color-bg-b { background-color: var(--color-black); }
+      .color-bg-r { background-color: var(--color-red); }
+      .color-bg-g { background-color: var(--color-green); }
+      .color-bg-y { background-color: var(--color-yellow); }
+      .color-bg-l { background-color: var(--color-blue); }
+      .color-bg-m { background-color: var(--color-magenta); }
+      .color-bg-c { background-color: var(--color-cyan); }
+      .color-bg-w { background-color: var(--color-white); }
+
+      // fix some bug
+      .color-fg-b.color-bg-b { color: var(--color-white)}
+
+      .link {
+        cursor: pointer;
+      }
+    }
+  }
+
+  .timestamps {
+
+  }
+}
