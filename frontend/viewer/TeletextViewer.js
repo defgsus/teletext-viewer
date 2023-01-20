@@ -1,6 +1,8 @@
 import {useEffect, useState} from "react";
 import "./style.scss"
 import TeletextPage from "./TeletextPage";
+import PageSelect from "./PageSelect";
+import Timestamp from "./Timestamp";
 
 
 const ARCHIVE_REPOS = [
@@ -37,7 +39,16 @@ const fetch_channel_pages = (repo_name, commit_hash, channel) => {
                 if (!line.length)
                     continue;
 
-                line = JSON.parse(line);
+                try {
+                    line = JSON.parse(line);
+                }
+                catch {
+                    if (line.startsWith("["))
+                        line = [["rb", "** ERROR PARSING LINE **".padEnd(40)]];
+                    else
+                        continue;
+                }
+
                 // start new page
                 if (line.page) {
                     if (page.lines)
@@ -81,8 +92,8 @@ const TeletextViewer = (props) => {
         }
         promise
             .then(timestamps => {
-                set_timestamps(timestamps);
-                set_timestamp(timestamps[timestamps.length - 1]);
+                set_timestamps(timestamps.reverse());
+                set_timestamp(timestamps[0]);
                 set_error(null);
             })
             .catch(e => set_error(`Failed to fetch timestamp data: ${e}`));
@@ -111,7 +122,7 @@ const TeletextViewer = (props) => {
     }, [channel_pages, page_index]);
 
     return (
-        <div className={"teletext-viewer"}>
+        <div className={"teletext-viewer"} {...props}>
             {!error ? null : <div className={"error"}>{error}</div>}
 
             <div className={"channels"}>
@@ -125,17 +136,30 @@ const TeletextViewer = (props) => {
                     </button>
                 ))}
             </div>
-            <div>
-                {JSON.stringify(page_index)}
+
+            <div className={"controls"}>
+                <div>
+                    <PageSelect
+                        page_index={page_index}
+                        set_page_index={set_page_index}
+                    />
+                </div>
             </div>
+
             <TeletextPage
                 page={current_page}
+                page_index={page_index}
+                timestamp={timestamp}
+                channel={channel}
                 set_page_index={(p, s) => set_page_index([p, s])}
+                big={true}
             />
 
             <div className={"timestamps"}>
                 {timestamps.map(ts => (
-                    <div key={ts.hash}>{ts.timestamp}</div>
+                    <div key={ts.hash}>
+                        <Timestamp timestamp={ts.timestamp}/>
+                    </div>
                 ))}
             </div>
         </div>

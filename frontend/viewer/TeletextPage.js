@@ -42,20 +42,36 @@ const TeletextPageLine = ({line, set_page_index}) => {
     );
 };
 
-const TeletextPage = ({page, set_page_index}) => {
+const TeletextPage = ({page, page_index, set_page_index, timestamp, channel, big}) => {
+
+    let header = `${channel} ${page_index[0]}-${page_index[1]}`;
+    if (timestamp?.timestamp) {
+        const ts = timestamp.timestamp.replace("T", " ");
+        header = header.padEnd(40 - ts.length) + ts;
+    }
 
     return (
         <div className={"teletext-page-wrapper"}>
-            <div className={"teletext-page"}>
+            <div className={big ? "teletext-page big" : "teletext-page"}>
+                <TeletextPageLine line={[["wb", [header.padEnd(40)]]]}/>
+                <TeletextPageLine line={[["wb", ["".padEnd(40)]]]}/>
                 {!page?.lines
-                    ? "empty"
-                    : page.lines.map((line, y) => (
-                        <TeletextPageLine
-                            key={y}
-                            line={line}
-                            set_page_index={set_page_index}
-                        />
-                    ))
+                    ? (
+                        <>
+                            <TeletextPageLine line={[["rb", "not found".padStart(24).padEnd(40)]]}/>
+                            {[...Array(25)].map((_, i) => (
+                                <TeletextPageLine key={i} line={[["wb"], "".padEnd(40)]}/>
+                            ))}
+                        </>
+                    ) : (
+                        page.lines.map((line, y) => (
+                            <TeletextPageLine
+                                key={y}
+                                line={line}
+                                set_page_index={set_page_index}
+                            />
+                        ))
+                    )
                 }
             </div>
             {/*<div>{JSON.stringify(page?.lines)}</div>*/}

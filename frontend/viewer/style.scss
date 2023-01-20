@@ -11,15 +11,23 @@
 
 @font-face {
   font-family: "unscii16";
-  src: url("unscii-16.woff") format("woff"),
+  src: url("unscii-16.woff") format("woff");
 }
 @font-face {
   font-family:"unscii8";
-  src: url("unscii-8.woff") format("woff"),
+  src: url("unscii-8.woff") format("woff");
 }
 
 .teletext-viewer {
   font-family: monospace;
+  input, button {
+    font-family: monospace;
+  }
+
+  .page-select {
+    input { width: 4rem; }
+  }
+
 
   .teletext-page-wrapper {
     margin: .1rem;
@@ -30,10 +38,16 @@
     color: var(--color-white);
 
     .teletext-page {
+      white-space: pre-wrap;
       font-family: "unscii16", monospace;
       font-size: 16px;
       line-height: 16px;
-      white-space: pre-wrap;
+
+      &.big {
+        font-family: "unscii8", monospace;
+        font-size: 16px;
+        line-height: 16px;
+      }
 
       .color-fg-b { color: var(--color-black); }
       .color-fg-r { color: var(--color-red); }
@@ -63,6 +77,7 @@
   }
 
   .timestamps {
-
+    overflow: scroll;
+    max-height: 20rem;
   }
 }
