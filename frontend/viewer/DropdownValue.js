@@ -1,7 +1,7 @@
 import {useEffect, useRef, useState} from "react";
 
 
-const DropdownValue = ({value, values, set_value, render, ...props}) => {
+const DropdownValue = ({value, values, set_value, render, compare, ...props}) => {
 
     const selected_ref = useRef();
     const [visible, set_visible] = useState(false);
@@ -14,15 +14,22 @@ const DropdownValue = ({value, values, set_value, render, ...props}) => {
             });
     }, [selected_ref?.current, visible]);
 
+    if (!compare)
+        compare = (a, b) => a === b;
+
     return (
         <div
             className={"dropdown"}
         >
+            <div
+                className={"dropdown-box-background" + (visible ? "" : " hidden")}
+                onClick={() => set_visible(false)}
+            />
             <div className={"dropdown-box" + (visible ? "" : " hidden")}>
                 {values.map((v, i) => (
                     <div
                         key={i}
-                        className={"value" + (v === value ? "" : " lesser")}
+                        className={"value" + (compare(value, v) ? "" : " lesser")}
                         ref={v === value ? selected_ref : null}
                         onClick={() => {
                             set_value(v);

@@ -4,7 +4,7 @@ const TeletextPageLine = ({line, set_page_index}) => {
 
     return (
         <div>
-            {line.map(block => {
+            {line.map((block, block_idx) => {
                 let color, content, link;
                 if (block.length === 2) {
                     [color, content] = block;
@@ -30,6 +30,7 @@ const TeletextPageLine = ({line, set_page_index}) => {
                 }
                 return (
                     <span
+                        key={block_idx}
                         className={className}
                         onClick={onClick}
                         title={title}

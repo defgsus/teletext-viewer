@@ -1,9 +1,8 @@
 import {useEffect, useState} from "react";
 import "./style.scss"
 import TeletextPage from "./TeletextPage";
-import PageSelect from "./PageSelect";
-import Timestamp from "./Timestamp";
 import DropdownValue from "./DropdownValue";
+import UrlHash from "./UrlHash";
 
 
 const ARCHIVE_REPOS = [
@@ -78,6 +77,7 @@ const TeletextViewer = (props) => {
     const [page_indices, set_page_indices] = useState([]);
     const [page_index, set_page_index] = useState([100, 1]);
     const [current_page, set_current_page] = useState(null);
+    const [is_loading, set_is_loading] = useState(true);
 
     // fetch timestamps from all repos
     useEffect(() => {
@@ -104,22 +104,26 @@ const TeletextViewer = (props) => {
 
     // fetch channel's pages at timestamp
     useEffect(() => {
-        if (timestamp) {
+        if (timestamp?.repo_name) {
+            set_is_loading(true);
             fetch_channel_pages(timestamp.repo_name, timestamp.hash, channel)
                 .then(pages => {
                     set_channel_pages(pages);
                     set_page_indices(pages.map(p => [p.page, p.sub_page]));
                     set_error(null);
+                    set_is_loading(false);
                     window.pages = pages;
                 })
                 .catch(e => {
                     set_error(`Failed to fetch teletext data: ${e}`);
                     set_channel_pages([]);
                     set_page_indices([]);
+                    set_is_loading(false);
                 });
         }
     }, [timestamps, timestamp, channel]);
 
+    // update page data from selected index
     useEffect(() => {
         let new_page = null;
         for (const page of channel_pages) {
@@ -131,8 +135,42 @@ const TeletextViewer = (props) => {
         set_current_page(new_page);
     }, [channel_pages, page_index]);
 
+    // update url hash
+    useEffect(() => {
+        let new_hash = `#${channel}/${page_index.join("-")}`;
+        if (timestamp?.timestamp)
+            new_hash = `${new_hash}/${timestamp.timestamp}`;
+        window.location.hash = new_hash;
+    }, [channel, timestamp, page_index]);
+
+    const on_url_hash_change = (hash) => {
+        const params = hash ? hash.slice(1).split("/") : [];
+        let new_channel = channel;
+        let new_page_index = page_index.join("-");
+        let new_timestamp = timestamp?.timestamp;
+        if (params.length > 0)
+            new_channel = params[0];
+        if (params.length > 1)
+            new_page_index = params[1];
+        if (params.length > 2)
+            new_timestamp = params[2];
+
+        if (new_channel !== channel || new_page_index !== page_index || new_timestamp !== timestamp) {
+            if (new_channel && new_channel !== channel && CHANNELS[new_channel])
+                set_channel(new_channel);
+            if (new_page_index && new_page_index !== page_index)
+                set_page_index(new_page_index.split("-").map(i => parseInt(i)));
+            if (new_timestamp && new_timestamp !== timestamp) {
+                new_timestamp = timestamps.find(t => t.timestamp === new_timestamp);
+                if (new_timestamp)
+                    set_timestamp(new_timestamp);
+            }
+        }
+    };
+
     return (
         <div className={"teletext-viewer"} {...props}>
+            <UrlHash on_change={on_url_hash_change}/>
             {!error ? null : <div className={"error"}>{error}</div>}
 
             <div className={"channels"}>
@@ -140,7 +178,10 @@ const TeletextViewer = (props) => {
                     <div
                         key={c}
                         onClick={() => set_channel(c)}
-                        className={c === channel ? "channel selected" : "channel"}
+                        className={
+                            "channel" + (c === channel ? " selected" : "")
+                            + (c === channel && is_loading ? " loading" : "")
+                        }
                     >
                         {c.toUpperCase()}
                     </div>
@@ -149,15 +190,12 @@ const TeletextViewer = (props) => {
 
             <div className={"controls"}>
                 <div>
-                    {/*<PageSelect
-                        page_index={page_index}
-                        set_page_index={set_page_index}
-                    />*/}
                     page: <DropdownValue
                         value={page_index}
                         set_value={set_page_index}
                         values={page_indices}
                         render={v => v.join("-")}
+                        compare={(a, b) => a[0] === b[0] && a[1] === b[1]}
                     />
                 </div>
                 <div>
