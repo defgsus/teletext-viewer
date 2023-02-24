@@ -53,11 +53,14 @@ const TeletextPage = ({page, page_index, set_page_index, timestamp, channel, big
     return (
         <div className={"teletext-page-wrapper"}>
             <div className={big ? "teletext-page big" : "teletext-page"}>
-                <TeletextPageLine line={[["wb", [header.padEnd(40)]]]}/>
-                <TeletextPageLine line={[["wb", ["".padEnd(40)]]]}/>
+                <TeletextPageLine line={[["ab", [header.padEnd(40)]]]}/>
+                <TeletextPageLine line={[["ab", ["".padEnd(40)]]]}/>
                 {!page?.lines
                     ? (
                         <>
+                            <TeletextPageLine line={[["rb", "".padEnd(40)]]}/>
+                            <TeletextPageLine line={[["rb", "404".padStart(21).padEnd(40)]]}/>
+                            <TeletextPageLine line={[["rb", "".padEnd(40)]]}/>
                             <TeletextPageLine line={[["rb", "not found".padStart(24).padEnd(40)]]}/>
                             {[...Array(25)].map((_, i) => (
                                 <TeletextPageLine key={i} line={[["wb"], "".padEnd(40)]}/>

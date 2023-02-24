@@ -1,9 +1,19 @@
 import TeletextViewer from "./viewer/TeletextViewer";
 
 
-const App = (props) => {
+const App = () => {
     return (
-        <TeletextViewer/>
+        <div className={"app-wrapper"}>
+            <TeletextViewer/>
+            <div>
+                <a
+                    href={"https://github.com/defgsus/teletext-viewer"}
+                    className={"github-link"}
+                >
+                    github.com/defgsus/teletext-viewer
+                </a>
+            </div>
+        </div>
     );
 }
 

@@ -3,6 +3,7 @@ import "./style.scss"
 import TeletextPage from "./TeletextPage";
 import PageSelect from "./PageSelect";
 import Timestamp from "./Timestamp";
+import DropdownValue from "./DropdownValue";
 
 
 const ARCHIVE_REPOS = [
@@ -74,9 +75,11 @@ const TeletextViewer = (props) => {
     const [channel, set_channel] = useState(CHANNELS[0]);
     const [timestamp, set_timestamp] = useState(null);
     const [channel_pages, set_channel_pages] = useState([]);
+    const [page_indices, set_page_indices] = useState([]);
     const [page_index, set_page_index] = useState([100, 1]);
     const [current_page, set_current_page] = useState(null);
 
+    // fetch timestamps from all repos
     useEffect(() => {
         let promise = null;
         for (const repo_name of ARCHIVE_REPOS) {
@@ -99,14 +102,21 @@ const TeletextViewer = (props) => {
             .catch(e => set_error(`Failed to fetch timestamp data: ${e}`));
     }, []);
 
+    // fetch channel's pages at timestamp
     useEffect(() => {
         if (timestamp) {
             fetch_channel_pages(timestamp.repo_name, timestamp.hash, channel)
                 .then(pages => {
                     set_channel_pages(pages);
+                    set_page_indices(pages.map(p => [p.page, p.sub_page]));
                     set_error(null);
+                    window.pages = pages;
                 })
-                .catch(e => set_error(`Failed to fetch teletext data: ${e}`));
+                .catch(e => {
+                    set_error(`Failed to fetch teletext data: ${e}`);
+                    set_channel_pages([]);
+                    set_page_indices([]);
+                });
         }
     }, [timestamps, timestamp, channel]);
 
@@ -127,21 +137,35 @@ const TeletextViewer = (props) => {
 
             <div className={"channels"}>
                 {CHANNELS.map(c => (
-                    <button
+                    <div
                         key={c}
-                        disabled={c === channel}
                         onClick={() => set_channel(c)}
+                        className={c === channel ? "channel selected" : "channel"}
                     >
-                        {c}
-                    </button>
+                        {c.toUpperCase()}
+                    </div>
                 ))}
             </div>
 
             <div className={"controls"}>
                 <div>
-                    <PageSelect
+                    {/*<PageSelect
                         page_index={page_index}
                         set_page_index={set_page_index}
+                    />*/}
+                    page: <DropdownValue
+                        value={page_index}
+                        set_value={set_page_index}
+                        values={page_indices}
+                        render={v => v.join("-")}
+                    />
+                </div>
+                <div>
+                    time: <DropdownValue
+                        value={timestamp}
+                        set_value={set_timestamp}
+                        values={timestamps}
+                        render={v => v?.timestamp}
                     />
                 </div>
             </div>
@@ -155,13 +179,13 @@ const TeletextViewer = (props) => {
                 big={true}
             />
 
-            <div className={"timestamps"}>
+            {/*<div className={"timestamps"}>
                 {timestamps.map(ts => (
                     <div key={ts.hash}>
                         <Timestamp timestamp={ts.timestamp}/>
                     </div>
                 ))}
-            </div>
+            </div>*/}
         </div>
     )
 };
