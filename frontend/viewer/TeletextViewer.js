@@ -1,8 +1,9 @@
-import {useEffect, useState} from "react";
+import {useEffect, useRef, useState} from "react";
 import "./style.scss"
 import TeletextPage from "./TeletextPage";
 import DropdownValue from "./DropdownValue";
 import UrlHash from "./UrlHash";
+import {timestamp_str} from "./util";
 
 
 const ARCHIVE_REPOS = [
@@ -69,6 +70,7 @@ const fetch_channel_pages = (repo_name, commit_hash, channel) => {
 
 
 const TeletextViewer = (props) => {
+
     const [error, set_error] = useState(null);
     const [timestamps, set_timestamps] = useState([]);
     const [channel, set_channel] = useState(CHANNELS[0]);
@@ -78,6 +80,9 @@ const TeletextViewer = (props) => {
     const [page_index, set_page_index] = useState([100, 1]);
     const [current_page, set_current_page] = useState(null);
     const [is_loading, set_is_loading] = useState(true);
+    const [raw_input, set_raw_input] = useState(null);
+    const [index_input, set_index_input] = useState(null);
+    const [timestamp_input, set_timestamp_input] = useState(null);
 
     // fetch timestamps from all repos
     useEffect(() => {
@@ -96,7 +101,8 @@ const TeletextViewer = (props) => {
         promise
             .then(timestamps => {
                 set_timestamps(timestamps.reverse());
-                set_timestamp(timestamps[0]);
+                if (!timestamp)
+                    set_timestamp(timestamps[0]);
                 set_error(null);
             })
             .catch(e => set_error(`Failed to fetch timestamp data: ${e}`));
@@ -140,7 +146,9 @@ const TeletextViewer = (props) => {
         let new_hash = `#${channel}/${page_index.join("-")}`;
         if (timestamp?.timestamp)
             new_hash = `${new_hash}/${timestamp.timestamp}`;
-        window.location.hash = new_hash;
+        if (new_hash !== window.location.hash) {
+            window.location.hash = new_hash;
+        }
     }, [channel, timestamp, page_index]);
 
     const on_url_hash_change = (hash) => {
@@ -156,7 +164,7 @@ const TeletextViewer = (props) => {
             new_timestamp = params[2];
 
         if (new_channel !== channel || new_page_index !== page_index || new_timestamp !== timestamp) {
-            if (new_channel && new_channel !== channel && CHANNELS[new_channel])
+            if (new_channel && new_channel !== channel && CHANNELS.indexOf(new_channel) >= 0)
                 set_channel(new_channel);
             if (new_page_index && new_page_index !== page_index)
                 set_page_index(new_page_index.split("-").map(i => parseInt(i)));
@@ -167,6 +175,136 @@ const TeletextViewer = (props) => {
             }
         }
     };
+
+    const get_next_sub_page = (steps=1)=> {
+        let index = page_indices?.findIndex(i => i[0] === page_index[0] && i[1] === page_index[1]);
+        if (index >= 0) {
+            index = Math.max(0, Math.min(page_indices.length - 1, index + steps));
+            return page_indices[index];
+        }
+    };
+    const get_next_timestamp = (steps=1)=> {
+        let index = timestamps?.findIndex(i => i.timestamp === timestamp?.timestamp);
+        if (index >= 0) {
+            index = Math.max(0, Math.min(timestamps.length - 1, index + steps));
+            return timestamps[index];
+        }
+    };
+
+    const parse_raw_input = (raw_input) => {
+        if (!raw_input) {
+            set_index_input(null);
+            set_timestamp_input(null);
+            return;
+        }
+        if (raw_input.length === 3) {
+            const num = parseInt(raw_input);
+            const item = page_indices?.find(i => i[0] === num);
+            set_index_input(item || null);
+            set_timestamp_input(null);
+        } else if (raw_input.length) {
+            let ts;
+            if (timestamp?.timestamp) {
+                // try <current-year>-<raw-input> first
+                const input = `${timestamp.timestamp.slice(0, 4)}-${raw_input}`;
+                ts = timestamps?.find(ts => ts.timestamp.indexOf(input) >= 0);
+            }
+            if (!ts)
+                ts = timestamps?.find(ts => ts.timestamp.indexOf(raw_input) >= 0);
+            set_index_input(null);
+            set_timestamp_input(ts || null);
+        } else {
+            set_index_input(null);
+            set_timestamp_input(null);
+        }
+    };
+
+    const handle_key = (event) => {
+        console.log("KEY", event.key);
+        let handled = true;
+        switch (event.key) {
+            case "ArrowLeft":
+            case "ArrowRight": {
+                const new_page_index = get_next_sub_page(event.key === "ArrowLeft" ? -1 : 1);
+                if (new_page_index) {
+                    set_page_index(new_page_index);
+                }
+                break;
+            }
+            case "ArrowUp":
+            case "ArrowDown": {
+                const new_timestamp = get_next_timestamp(event.key === "ArrowUp" ? -1 : 1);
+                if (new_timestamp) {
+                    set_timestamp(new_timestamp);
+                }
+                break;
+            }
+            case "PageUp":
+            case "PageDown": {
+                const new_timestamp = get_next_timestamp(event.key === "PageUp" ? -21 : 21);
+                if (new_timestamp) {
+                    set_timestamp(new_timestamp);
+                }
+                break;
+            }
+            case "Enter":
+            case "Return": {
+                if (index_input) {
+                    set_page_index(index_input)
+                } else if (timestamp_input) {
+                    set_timestamp(timestamp_input);
+                }
+                set_raw_input(null);
+                parse_raw_input(null);
+                break;
+            }
+            case "0":
+            case "1":
+            case "2":
+            case "3":
+            case "4":
+            case "5":
+            case "6":
+            case "7":
+            case "8":
+            case "9":
+            case "-":
+            case "/": {
+                let new_input = (raw_input || "") + event.key;
+                set_raw_input(new_input);
+                parse_raw_input(new_input);
+                break;
+            }
+            case "Backspace": {
+                const new_input = raw_input?.length ? raw_input.slice(0, -1) : null;
+                set_raw_input(new_input);
+                parse_raw_input(new_input);
+                break;
+            }
+            default:
+                handled = false;
+        }
+        if (handled) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+    }
+
+    // bind the newest state to the keydown handler
+    useEffect(() => {
+        document.onkeydown = handle_key;
+    }, [page_indices, page_index, raw_input, index_input, timestamp_input, timestamps, timestamp]);
+
+    let prev_next_page = ["none", "none"];
+    if (page_indices && page_index) {
+        const idx = page_indices.findIndex(i => i[0] === page_index[0] && i[1] === page_index[1]);
+        if (idx >= 0) {
+            prev_next_page = [
+                idx > 0 ? page_indices[idx - 1].join("-") : "none",
+                idx < page_indices.length-1 ? page_indices[idx + 1].join("-") : "none",
+            ];
+        }
+    }
 
     return (
         <div className={"teletext-viewer"} {...props}>
@@ -189,23 +327,39 @@ const TeletextViewer = (props) => {
             </div>
 
             <div className={"controls"}>
-                <div>
-                    page: <DropdownValue
-                        value={page_index}
-                        set_value={set_page_index}
-                        values={page_indices}
-                        render={v => v.join("-")}
-                        compare={(a, b) => a[0] === b[0] && a[1] === b[1]}
-                    />
-                </div>
-                <div>
-                    time: <DropdownValue
-                        value={timestamp}
-                        set_value={set_timestamp}
-                        values={timestamps}
-                        render={v => v?.timestamp}
-                    />
-                </div>
+                {raw_input ? ([
+                    <div key={0}>
+                        > <span className={"edited"}>{raw_input}</span>
+                    </div>,
+                    <div key={1}>
+                        {index_input
+                            ? `(index ${index_input.join("-")})`
+                            : timestamp_input
+                                ? `(time ${timestamp_str(timestamp_input.timestamp)})`
+                                : ""
+                        }
+                    </div>
+                ]) : ([
+                    <div key={0}>
+                        <DropdownValue
+                            value={index_input || page_index}
+                            set_value={set_page_index}
+                            values={page_indices}
+                            render={v => v.join("-")}
+                            compare={(a, b) => a[0] === b[0] && a[1] === b[1]}
+                            className={index_input ? "edited" : null}
+                        />{/*(prev: {prev_next_page[0]}, next: {prev_next_page[1]})*/}
+                    </div>,
+                    <div key={1}>
+                        <DropdownValue
+                            value={timestamp_input || timestamp}
+                            set_value={set_timestamp}
+                            values={timestamps}
+                            render={v => timestamp_str(v?.timestamp)}
+                            className={timestamp_input ? "edited" : null}
+                        />
+                    </div>
+                ])}
             </div>
 
             <TeletextPage
@@ -217,13 +371,6 @@ const TeletextViewer = (props) => {
                 big={true}
             />
 
-            {/*<div className={"timestamps"}>
-                {timestamps.map(ts => (
-                    <div key={ts.hash}>
-                        <Timestamp timestamp={ts.timestamp}/>
-                    </div>
-                ))}
-            </div>*/}
         </div>
     )
 };

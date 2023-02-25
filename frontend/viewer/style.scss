@@ -129,6 +129,13 @@ body {
     input { width: 4rem; }
   }
 
+  .edited {
+    color: var(--color-green);
+    .value {
+      color: var(--color-green);
+    }
+  }
+
   .dropdown {
     display: inline-block;
     background: var(--color-back);
@@ -160,6 +167,8 @@ body {
   .controls {
     font-size: 24px;
     padding: 8px 0;
+    display: flex;
+    justify-content: space-between;
   }
 
   .teletext-page-wrapper {

@@ -1,7 +1,7 @@
 import {useEffect, useRef, useState} from "react";
 
 
-const DropdownValue = ({value, values, set_value, render, compare, ...props}) => {
+const DropdownValue = ({value, values, set_value, render, compare, className, ...props}) => {
 
     const selected_ref = useRef();
     const [visible, set_visible] = useState(false);
@@ -19,7 +19,8 @@ const DropdownValue = ({value, values, set_value, render, compare, ...props}) =>
 
     return (
         <div
-            className={"dropdown"}
+            className={"dropdown" + (className ? ` ${className}` : "")}
+            {...props}
         >
             <div
                 className={"dropdown-box-background" + (visible ? "" : " hidden")}
