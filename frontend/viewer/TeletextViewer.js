@@ -4,6 +4,7 @@ import TeletextPage from "./TeletextPage";
 import DropdownValue from "./DropdownValue";
 import UrlHash from "./UrlHash";
 import {timestamp_str} from "./util";
+import SlideshowControls from "./SlideshowControls";
 
 
 const ARCHIVE_REPOS = [
@@ -179,16 +180,35 @@ const TeletextViewer = (props) => {
     const get_next_sub_page = (steps=1)=> {
         let index = page_indices?.findIndex(i => i[0] === page_index[0] && i[1] === page_index[1]);
         if (index >= 0) {
-            index = Math.max(0, Math.min(page_indices.length - 1, index + steps));
-            return page_indices[index];
+            index = index + steps;
+            return page_indices[index] || null;
         }
+        return null;
     };
+
     const get_next_timestamp = (steps=1)=> {
         let index = timestamps?.findIndex(i => i.timestamp === timestamp?.timestamp);
         if (index >= 0) {
-            index = Math.max(0, Math.min(timestamps.length - 1, index + steps));
-            return timestamps[index];
+            if (steps === 21) {
+                const date = new Date(timestamp.timestamp);
+                while (Math.abs(date - new Date(timestamps[index].timestamp)) / 1000 / 60 / 60 / 24 < 7) {
+                    index += steps < 0 ? -1 : 1;
+                    if (index < 0 || index >= timestamps.length)
+                        return null;
+                }
+            } else if (steps === 3) {
+                const day = timestamp.timestamp.slice(0, 10);
+                while (timestamps[index].timestamp.startsWith(day)) {
+                    index += steps < 0 ? -1 : 1;
+                    if (index < 0 || index >= timestamps.length)
+                        return null;
+                }
+            } else {
+                index = index + steps;
+            }
+            return timestamps[index] || null;
         }
+        return null;
     };
 
     const parse_raw_input = (raw_input) => {
@@ -221,11 +241,16 @@ const TeletextViewer = (props) => {
 
     const handle_key = (event) => {
         console.log("KEY", event.key);
+        if (event.ctrlKey || event.altKey || event.metaKey)
+            return;
+
         let handled = true;
         switch (event.key) {
             case "ArrowLeft":
             case "ArrowRight": {
-                const new_page_index = get_next_sub_page(event.key === "ArrowLeft" ? -1 : 1);
+                const new_page_index = event.key === "ArrowLeft"
+                    ? get_next_sub_page(-1) || page_indices[page_indices.length - 1]
+                    : get_next_sub_page(1) || page_indices[0];
                 if (new_page_index) {
                     set_page_index(new_page_index);
                 }
@@ -233,7 +258,9 @@ const TeletextViewer = (props) => {
             }
             case "ArrowUp":
             case "ArrowDown": {
-                const new_timestamp = get_next_timestamp(event.key === "ArrowUp" ? -1 : 1);
+                const new_timestamp = event.key === "ArrowUp"
+                    ? get_next_timestamp(-1) || timestamps[timestamps.length - 1]
+                    : get_next_timestamp(1) || timestamps[0];
                 if (new_timestamp) {
                     set_timestamp(new_timestamp);
                 }
@@ -294,17 +321,6 @@ const TeletextViewer = (props) => {
     useEffect(() => {
         document.onkeydown = handle_key;
     }, [page_indices, page_index, raw_input, index_input, timestamp_input, timestamps, timestamp]);
-
-    let prev_next_page = ["none", "none"];
-    if (page_indices && page_index) {
-        const idx = page_indices.findIndex(i => i[0] === page_index[0] && i[1] === page_index[1]);
-        if (idx >= 0) {
-            prev_next_page = [
-                idx > 0 ? page_indices[idx - 1].join("-") : "none",
-                idx < page_indices.length-1 ? page_indices[idx + 1].join("-") : "none",
-            ];
-        }
-    }
 
     return (
         <div className={"teletext-viewer"} {...props}>
@@ -371,6 +387,19 @@ const TeletextViewer = (props) => {
                 big={true}
             />
 
+            <SlideshowControls
+                channels={CHANNELS}
+                page_indices={page_indices}
+                timestamps={timestamps}
+                page_index={page_index}
+                timestamp={timestamp}
+                channel={channel}
+                get_next_timestamp={get_next_timestamp}
+                get_next_page={get_next_sub_page}
+                set_timestamp={set_timestamp}
+                set_page_index={set_page_index}
+                set_channel={set_channel}
+            />
         </div>
     )
 };

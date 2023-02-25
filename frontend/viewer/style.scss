@@ -10,6 +10,7 @@
   --color-gray: #888;
 
   --color-back: #181818;
+  --color-back-hl: #282828;
   --color: #fff;
   --color-link: #5f5fbf;
   --color-error-back: #7f3f3f;
@@ -31,6 +32,10 @@
 
 .hidden {
   display: none !important;
+}
+
+.clickable {
+  cursor: pointer;
 }
 
 body {
@@ -70,7 +75,9 @@ body {
 
   .app-wrapper {
     margin: 0 auto;
-
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
     .github-link {
       color: #3f4c66;
       float: right;
@@ -154,13 +161,19 @@ body {
     }
     .dropdown-box {
       z-index: 101;
-      background: var(--color-back);
-      position: fixed;
+      background: var(--color-black);
+      position: absolute;
       max-height: 10rem;
       overflow: scroll;
       display: inline-block;
       padding: 8px;
       margin: -8px;
+      .value {
+        &:hover {
+          background-color: var(--color-back-hl);
+          color: var(--color-white);
+        }
+      }
     }
   }
 
@@ -169,6 +182,34 @@ body {
     padding: 8px 0;
     display: flex;
     justify-content: space-between;
+  }
+
+  .slideshow {
+    .header {
+      display: flex;
+      justify-content: space-between;
+      color: var(--color-gray);
+      &.visible {
+        color: var(--color-white);
+      }
+    }
+    .slideshow-controls {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-evenly;
+      padding: -4px -10px;
+      max-width: 650px;
+
+      > div {
+        margin: 4px 10px;
+      }
+
+      .button {
+        .active, &.active {
+          color: var(--color-green);
+        }
+      }
+    }
   }
 
   .teletext-page-wrapper {
@@ -219,8 +260,4 @@ body {
     }
   }
 
-  .timestamps {
-    overflow: scroll;
-    max-height: 20rem;
-  }
 }
