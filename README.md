@@ -10,6 +10,17 @@ The web-app fetches the data from `raw.githubusercontent.com` and allows **brows
 
 Many thanks to [viznut](http://viznut.fi/) for the fantastic [unscii font](https://github.com/viznut/unscii)!
 
+### control
+
+- click page numbers 
+- `Left`, `Right`: navigate through pages
+- `Up`, `Down`: navigate through time
+- `PageUp`, `PageDown`: navigate through time in **weeks**
+- `Numbers`: Type three numbers to navigate to a page, otherwise numbers select timestamps.
+
+  E.g. typing `2022` leads to the newest entry for 2022, `2022-02` leads to the newest
+  entry in Feb. 2022, `03-15` jumps to March 15th, either in the currently selected (if present) or newest year.
+
 It's possible to link to specific channels, pages and timestamps via the url hash, e.g.
 
 - [#zdf/125-1/2022-03-05T08:22:20](https://defgsus.github.io/teletext-viewer/#zdf/125-1/2022-03-05T08:22:20)
@@ -22,17 +33,6 @@ It's possible to link to specific channels, pages and timestamps via the url has
   is the first ascii-art weather map after an encoding bug was fixed in the 
   [original scraper](https://github.com/defgsus/teletext-archive). You can enable a **slideshow through 
   time** below the text window.
-
-
-### keyboard control
-
-- `Left`, `Right`: navigate through pages
-- `Up`, `Down`: navigate through time
-- `PageUp`, `PageDown`: navigate through time in **weeks**
-- `Numbers`: Type three numbers to navigate to a page, otherwise numbers select timestamps. 
-  
-  E.g. typing `2022` leads to the newest entry for 2022, `2022-02` leads to the newest
-  entry in Feb. 2022, `03-15` jumps to March 15th, either in the currently selected (if present) or newest year.
 
 
 ---

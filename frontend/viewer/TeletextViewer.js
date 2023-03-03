@@ -3,7 +3,7 @@ import "./style.scss"
 import TeletextPage from "./TeletextPage";
 import DropdownValue from "./DropdownValue";
 import UrlHash from "./UrlHash";
-import {timestamp_str} from "./util";
+import {add_page_links, timestamp_str} from "./util";
 import SlideshowControls from "./SlideshowControls";
 
 
@@ -115,6 +115,7 @@ const TeletextViewer = (props) => {
             set_is_loading(true);
             fetch_channel_pages(timestamp.repo_name, timestamp.hash, channel)
                 .then(pages => {
+                    add_page_links(pages);
                     set_channel_pages(pages);
                     set_page_indices(pages.map(p => [p.page, p.sub_page]));
                     set_error(null);
